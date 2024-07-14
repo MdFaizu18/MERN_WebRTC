@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Lobby from './pages/Lobby';
 import { SocketProvider } from './context/SocketProvider';
 import Room from './pages/Room';
+import VideoEnded from './pages/VideoEnded';
 
 const router = createBrowserRouter([
   {
@@ -12,6 +13,10 @@ const router = createBrowserRouter([
   {
     path: '/room/:roomId',
     element: <Room />
+  },
+  {
+    path: '/video-ended',
+    element: <VideoEnded />
   }
 ]);
 

@@ -3,14 +3,16 @@ import { Box, Button, Container, Typography } from '@mui/material';
 import { useSocket } from '../context/SocketProvider';
 import ReactPlayer from 'react-player';
 import Peer from '../service/Peer';
+import { useNavigate } from 'react-router-dom';
 
 const Room = () => {
     const socket = useSocket();
+    const navigate = useNavigate();
 
     const [socketId, setSocketid] = useState('');
     const [user, setUser] = useState('');
     const [myStream, setMyStream] = useState('');
-    const [remoteStream,setRemoteStream] = useState('');
+    const [remoteStream, setRemoteStream] = useState('');
     const [isDisabled, setIsDisabled] = useState(false);
     const [isDisabled2, setIsDisabled2] = useState(false);
 
@@ -46,54 +48,52 @@ const Room = () => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         console.log("Incomming call from", from, offer);
         const answer = await Peer.getAnswer(offer);
-        socket.emit("call:accepted",{to:from,answer})
+        socket.emit("call:accepted", { to: from, answer })
         setMyStream(stream);
     };
 
-
     // to send the streams to each others 
-    const sendStreams  =()=>{
+    const sendStreams = () => {
         for (const track of myStream.getTracks()) {
             Peer.peer.addTrack(track, myStream);
         }
     };
 
     // second person accepts the call and starts sharing their stream
-    const handleCallAccepted = async ({from,answer})=>{
-       Peer.setLocalDescription(answer);
-       console.log("Call accepted from");
-       sendStreams();
+    const handleCallAccepted = async ({ from, answer }) => {
+        Peer.setLocalDescription(answer);
+        console.log("Call accepted from");
+        sendStreams();
     };
-   
-    const handleNegoNeeded = async ()=>{
+
+    const handleNegoNeeded = async () => {
         const offer = await Peer.getOffer();
-        socket.emit("peer:nego:needed",{offer,to:socketId})
+        socket.emit("peer:nego:needed", { offer, to: socketId })
     };
 
-    const handleNegoNeededIncomming = async ({from,offer})=>{
+    const handleNegoNeededIncomming = async ({ from, offer }) => {
         const answer = await Peer.getAnswer(offer);
-        socket.emit("peer:nego:done",{to:from,answer})
+        socket.emit("peer:nego:done", { to: from, answer })
     };
 
-    const handleNegoNeededFinal = async ({answer})=>{
-      await Peer.setLocalDescription(answer)
+    const handleNegoNeededFinal = async ({ answer }) => {
+        await Peer.setLocalDescription(answer)
     }
 
-   // handling eventlisteners
-   useEffect(()=>{
-       Peer.peer.addEventListener('negotiationneeded',handleNegoNeeded);
-       return ()=>{
-        Peer.peer.removeEventListener('negotiationneeded',handleNegoNeeded);
-    }
-   })
+    // handling event listeners
+    useEffect(() => {
+        Peer.peer.addEventListener('negotiationneeded', handleNegoNeeded);
+        return () => {
+            Peer.peer.removeEventListener('negotiationneeded', handleNegoNeeded);
+        }
+    })
 
-    useEffect(()=>{
-      Peer.peer.addEventListener('track', async ev =>{
-        const remoteStream = ev.streams;
-        setRemoteStream(remoteStream[0]);
-      })
-    },[]);
-
+    useEffect(() => {
+        Peer.peer.addEventListener('track', async ev => {
+            const remoteStream = ev.streams;
+            setRemoteStream(remoteStream[0]);
+        })
+    }, []);
 
     // to handle the incoming and user joined events
     useEffect(() => {
@@ -111,9 +111,18 @@ const Room = () => {
         }
     }, [socket, handleUserJoined]);
 
+    const handleEndVideo = () => {
+        if (myStream) {
+            myStream.getTracks().forEach(track => track.stop());
+            setMyStream(null);
+            setRemoteStream(null);
+            navigate('/video-ended');
+        }
+    };
+
     return (
         <>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '70vh' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '90vh' }}>
                 <Container component="main" maxWidth="md">
                     <Typography component="h1" variant="h3" sx={{ mb: 2, textAlign: 'center', fontWeight: 'bold' }}>
                         Room Page
@@ -121,26 +130,33 @@ const Room = () => {
                     <Typography component="h3" variant="h5" sx={{ textAlign: 'center', color: socketId ? 'green' : 'red' }}>
                         {socketId ? `Connected with ${user}` : "No one in the room"}
                     </Typography>
-                  <Box sx={{display:'flex',justifyContent:'space-evenly'}}>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', margin: '2% 0 3% 0', borderRadius: '20px' }}>
-                        {myStream &&
-                            <ReactPlayer url={myStream}
-                                playing
-                                muted
-                                height="200px"
-                                width="300px"
-                            />}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-evenly' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', margin: '2% 0 3% 0', borderRadius: '20px' }}>
+                            <Box>
+                                {myStream && <Typography variant='h4' sx={{ textAlign: 'center' }}>My Stream</Typography>}
+                                {myStream &&
+                                    <ReactPlayer url={myStream}
+                                        playing
+                                        muted
+                                        height="200px"
+                                        width="300px"
+                                    />}
+                            </Box>
+                        </Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', margin: '2% 0 3% 0', borderRadius: '20px' }}>
+                            <Box>
+                                {remoteStream && <Typography variant='h4' sx={{ textAlign: 'center' }}>{user} Stream</Typography>}
+
+                                {remoteStream &&
+                                    <ReactPlayer url={remoteStream}
+                                        playing
+                                        muted
+                                        height="200px"
+                                        width="300px"
+                                    />}
+                            </Box>
+                        </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', margin: '2% 0 3% 0', borderRadius: '20px' }}>
-                        {remoteStream &&
-                            <ReactPlayer url={remoteStream}
-                                playing
-                                muted
-                                height="200px"
-                                width="300px"
-                            />}
-                    </Box>
-                  </Box>
                     {socketId && (
                         <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '5%' }}>
                             <Button
@@ -163,8 +179,8 @@ const Room = () => {
                         </Box>
                     )}
                     <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '5%' }}>
-                      {myStream &&
-                        <Button onClick={sendStreams}
+                        {myStream &&
+                            <Button onClick={sendStreams}
                                 variant="contained"
                                 disabled={isDisabled2}
                                 sx={{
@@ -177,15 +193,32 @@ const Room = () => {
                                         boxShadow: '0px 0px 10px rgba(0,0,0,.5)',
                                     },
                                 }}
-                        >
-                        Send Streams
-                        </Button>}
+                            >
+                                Send Streams
+                            </Button>}
                     </Box>
-
+                    <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '5%' }}>
+                        {myStream &&
+                            <Button
+                                onClick={handleEndVideo}
+                                sx={{
+                                    backgroundColor: 'black',
+                                    color: 'white',
+                                    fontWeight: '500',
+                                    '&:hover': {
+                                        backgroundColor: 'black',
+                                        color: 'white',
+                                        boxShadow: '0px 0px 10px rgba(0,0,0,.5)',
+                                    },
+                                }}
+                            >
+                                End Video
+                            </Button>}
+                    </Box>
                 </Container>
             </Box>
         </>
     )
 }
 
-export default Room
+export default Room;
