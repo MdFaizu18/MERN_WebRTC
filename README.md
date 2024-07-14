@@ -78,7 +78,8 @@ Here the Preview of my project
 ![Screenshot (328)](https://github.com/user-attachments/assets/5e87d091-641d-471a-b77c-d71d0a6d787d)
 
 ### It will redirect to the page once you click the end video
-![Screenshot (329)](https://github.com/user-attachments/assets/a3797ee6-83da-44b8-99d5-76c9ffc2e4c7)
+![Screenshot (331)](https://github.com/user-attachments/assets/bd90459b-4aad-4cba-b4b8-6993601f3f61)
+
 
 
 
