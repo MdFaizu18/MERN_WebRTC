@@ -1,3 +1,4 @@
+// to importing the necessary packages and routes
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Lobby from './pages/Lobby';
@@ -5,6 +6,7 @@ import { SocketProvider } from './context/SocketProvider';
 import Room from './pages/Room';
 import VideoEnded from './pages/VideoEnded';
 
+// creating the navigating routes
 const router = createBrowserRouter([
   {
     path: '/',
@@ -20,6 +22,7 @@ const router = createBrowserRouter([
   }
 ]);
 
+// rendering the route via socketprovider
 const App = () => {
   return (
     <SocketProvider>
